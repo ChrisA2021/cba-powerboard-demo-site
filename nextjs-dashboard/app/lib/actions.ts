@@ -15,6 +15,79 @@ const FormSchema = z.object({
     date: z.string(),
 });
 
+const CustomerFormSchema = z.object({
+    customerGivenName: z.string({ invalid_type_error: 'Please enter your given name', }),
+    customerFamilyName: z.string({ invalid_type_error: 'Please enter your family name.', }),
+    customerEmail: z.string({ invalid_type_error: 'Please enter your email.', }),
+    customerAddress: z.string({ invalid_type_error: 'Please enter your address.', }),
+    customerCity: z.string({ invalid_type_error: 'Please enter your city.', }),
+    customerState: z.string({ invalid_type_error: 'Please enter your state.', }),
+    customerPostcode: z.string({ invalid_type_error: 'Please enter your postcode.', }),
+    customerCountry: z.string({ invalid_type_error: 'Please enter your country.', }),
+});
+
+const CreateCustomer = CustomerFormSchema;
+
+export type CustomerState = {
+    errors?: {
+        customerGivenName?: string[];
+        customerFamilyName?: string[];
+        customerEmail?: string[];
+        customerAddress?: string[];
+        customerCity?: string[];
+        customerState?: string[];
+        customerPostcode?: string[];
+        customerCountry?: string[];
+    };
+    message?: string | null;
+};
+
+export async function createCustomer(prevState: CustomerState, formData: FormData) {
+
+    console.log('hi');
+    // Validate form fields using Zod
+    const validatedFields = CreateCustomer.safeParse({
+        customerGivenName: formData.get('customerGivenName'),
+        customerFamilyName: formData.get('customerFamilyName'),
+        customerEmail: formData.get('customerEmail'),
+        customerAddress: formData.get('customerAddress'),
+        customerCity: formData.get('customerCity'),
+        customerState: formData.get('customerState'),
+        customerPostcode: formData.get('customerPostcode'),
+        customerCountry: formData.get('customerCountry'),
+    });
+    console.log(validatedFields);
+
+
+    // If form validation fails, return errors early. Otherwise, continue.
+    if (!validatedFields.success) {
+        // console.log(validatedFields);
+        return {
+            errors: validatedFields.error.flatten().fieldErrors,
+            message: 'Missing Fields. Failed to Create Customer.',
+        };
+    }
+
+    // Prepare data for insertion into the database
+    const { customerGivenName, customerFamilyName, customerAddress, customerEmail, customerCity, customerState, customerPostcode, customerCountry } = validatedFields.data;
+
+    // Insert data into the database
+    try {
+        await sql`
+        INSERT INTO customerv2 (customer_given_name, customer_family_name, customer_address, customer_email, customer_city, customer_state, customer_postcode, customer_country)
+        VALUES (${customerGivenName}, ${customerFamilyName}, ${customerAddress}, ${customerEmail}, ${customerCity}, ${customerState}, ${customerPostcode}, ${customerCountry})
+      `;
+    } catch (error) {
+        return {
+            message: 'Database Error: Failed to Create Customer.',
+        };
+    }
+
+    // Revalidate the cache for the invoices page and redirect the user.
+    revalidatePath('/dashboard/store');
+    redirect('/dashboard/store');
+}
+
 const CreateInvoice = FormSchema.omit({ id: true, date: true });
 
 export type State = {
