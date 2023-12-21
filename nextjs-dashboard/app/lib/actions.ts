@@ -24,6 +24,7 @@ const CustomerFormSchema = z.object({
     customerState: z.string({ invalid_type_error: 'Please enter your state.', }),
     customerPostcode: z.string({ invalid_type_error: 'Please enter your postcode.', }),
     customerCountry: z.string({ invalid_type_error: 'Please enter your country.', }),
+    customerPaymentMethod: z.string({ invalid_type_error: 'Please select a payment method.', }),
 });
 
 const CreateCustomer = CustomerFormSchema;
@@ -38,6 +39,7 @@ export type CustomerState = {
         customerState?: string[];
         customerPostcode?: string[];
         customerCountry?: string[];
+        customerPaymentMethod?: string[];
     };
     message?: string | null;
 };
@@ -55,6 +57,7 @@ export async function createCustomer(prevState: CustomerState, formData: FormDat
         customerState: formData.get('customerState'),
         customerPostcode: formData.get('customerPostcode'),
         customerCountry: formData.get('customerCountry'),
+        customerPaymentMethod: formData.get('customerPaymentMethod'),
     });
     console.log(validatedFields);
 
@@ -64,22 +67,39 @@ export async function createCustomer(prevState: CustomerState, formData: FormDat
         // console.log(validatedFields);
         return {
             errors: validatedFields.error.flatten().fieldErrors,
-            message: 'Missing Fields. Failed to Create Customer.',
+            message: 'Missing Fields. Please enter required billing information.',
         };
     }
 
     // Prepare data for insertion into the database
-    const { customerGivenName, customerFamilyName, customerAddress, customerEmail, customerCity, customerState, customerPostcode, customerCountry } = validatedFields.data;
+    const { customerGivenName, customerFamilyName, customerAddress, customerEmail, customerCity, customerState, customerPostcode, customerCountry, customerPaymentMethod } = validatedFields.data;
+
+    // Create the table if it does not exist
+    await sql`
+        CREATE TABLE IF NOT EXISTS billing_info (
+        id SERIAL PRIMARY KEY,
+        customer_given_name VARCHAR(255),
+        customer_family_name VARCHAR(255),
+        customer_address VARCHAR(255),
+        customer_email VARCHAR(255),
+        customer_city VARCHAR(255),
+        customer_state VARCHAR(255),
+        customer_postcode VARCHAR(255),
+        customer_country VARCHAR(255),
+        customer_payment_method VARCHAR(255)
+        );
+    `;
+    console.log('table created')
 
     // Insert data into the database
     try {
         await sql`
-        INSERT INTO customerv2 (customer_given_name, customer_family_name, customer_address, customer_email, customer_city, customer_state, customer_postcode, customer_country)
-        VALUES (${customerGivenName}, ${customerFamilyName}, ${customerAddress}, ${customerEmail}, ${customerCity}, ${customerState}, ${customerPostcode}, ${customerCountry})
+        INSERT INTO billing_info (customer_given_name, customer_family_name, customer_address, customer_email, customer_city, customer_state, customer_postcode, customer_country, customer_payment_method)
+        VALUES (${customerGivenName}, ${customerFamilyName}, ${customerAddress}, ${customerEmail}, ${customerCity}, ${customerState}, ${customerPostcode}, ${customerCountry}, ${customerPaymentMethod})
       `;
     } catch (error) {
         return {
-            message: 'Database Error: Failed to Create Customer.',
+            message: 'Database Error: Failed to Complete Transaction.',
         };
     }
 
@@ -191,18 +211,18 @@ export async function deleteInvoice(id: string) {
 export async function authenticate(
     prevState: string | undefined,
     formData: FormData,
-  ) {
+) {
     try {
-      await signIn('credentials', formData);
+        await signIn('credentials', formData);
     } catch (error) {
-      if (error instanceof AuthError) {
-        switch (error.type) {
-          case 'CredentialsSignin':
-            return 'Invalid credentials.';
-          default:
-            return 'Something went wrong.';
+        if (error instanceof AuthError) {
+            switch (error.type) {
+                case 'CredentialsSignin':
+                    return 'Invalid credentials.';
+                default:
+                    return 'Something went wrong.';
+            }
         }
-      }
-      throw error;
+        throw error;
     }
-  }
+}
