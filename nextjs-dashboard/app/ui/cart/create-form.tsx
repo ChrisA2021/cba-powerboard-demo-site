@@ -12,6 +12,11 @@ import { Button } from '@/app/ui/button';
 import { createCustomer } from '@/app/lib/actions';
 import { useFormState } from 'react-dom';
 import { Email, LocationOn, LocationCity, Flag, Map } from '@mui/icons-material';
+import PayPalIcon from '@/app/components/Icons/PayPalIcon';
+import AfterPayIcon from '@/app/components/Icons/AfterPayIcon';
+// import CreditCardIcon from '@/app/components/Icons/CreditCardIcon';
+// import CreditCardIcon2 from '@/app/components/Icons/CreditCardIcon2';
+import CreditCardIcon3 from '@/app/components/Icons/CreditCardIcon3';
 
 export default function Form() {
   const initialState = { message: null, errors: {} };
@@ -242,8 +247,8 @@ export default function Form() {
           </div>
         </div>
 
-      {/* Invoice Status */}
-      <fieldset aria-describedby="form-error">
+        {/* Invoice Status */}
+        <fieldset aria-describedby="form-error">
           <legend className="mb-2 block text-sm font-medium">
             Pay with:
           </legend>
@@ -263,7 +268,7 @@ export default function Form() {
                   htmlFor="pending"
                   className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600"
                 >
-                  Credit Card <CreditCardIcon className="h-4 w-4" />
+                  Credit Card <CreditCardIcon3/>
                 </label>
               </div>
               <div className="flex items-center">
@@ -278,9 +283,30 @@ export default function Form() {
                 />
                 <label
                   htmlFor="paid"
-                  className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-green-500 px-3 py-1.5 text-xs font-medium text-white"
+                  className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-[#FFC641] px-3 py-1.5 text-xs font-bold italic text-[#08378B]"
                 >
-                  PayPal <CheckIcon className="h-4 w-4" />
+                  <div style={{ display: 'flex'}}>
+                    <span className="text-[#08378B]" >Pay</span>
+                    <span style={{ color: '#279ED8'}}>Pal</span>
+                  </div>
+                  <PayPalIcon/>
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  id="afterPay"
+                  name="customerPaymentMethod"
+                  type="radio"
+                  value="afterPay"
+                  className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
+                  aria-describedby="payment-error"
+                  required
+                />
+                <label
+                  htmlFor="paid"
+                  className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-black"
+                >
+                  afterpay <AfterPayIcon/>
                 </label>
               </div>
             </div>
@@ -295,12 +321,12 @@ export default function Form() {
           </div>
         </fieldset>
         <div id="form-error" aria-live="polite" aria-atomic="true">
-            {state.message && (
-              <p className="mt-2 text-sm text-red-500" key={state.message}>
-                {state.message}
-              </p>
-            )}
-          </div>
+          {state.message && (
+            <p className="mt-2 text-sm text-red-500" key={state.message}>
+              {state.message}
+            </p>
+          )}
+        </div>
 
 
       </div>
