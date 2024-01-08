@@ -30,6 +30,7 @@ const CustomerFormSchema = z.object({
 const CreateCustomer = CustomerFormSchema;
 
 export type CustomerState = {
+    customerPaymentMethod?: string;
     errors?: {
         customerGivenName?: string[];
         customerFamilyName?: string[];
