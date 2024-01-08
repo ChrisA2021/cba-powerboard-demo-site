@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 
-const PowerBoardWidget = ({ publicKey, gatewayId }) => {
+const CreditCardWidget = ({ publicKey, gatewayId }) => {
   useEffect(() => {
-    // Dynamically create script tag for PowerBoard Widget
+    // Dynamically create script tag for CreditCardWidget 
     const script = document.createElement('script');
     script.src = 'https://widget.preproduction.powerboard.commbank.com.au/sdk/latest/widget.umd.js';
     script.async = true;
@@ -36,4 +36,4 @@ const PowerBoardWidget = ({ publicKey, gatewayId }) => {
   return <div id="widget"></div>;
 };
 
-export default PowerBoardWidget;
+export default CreditCardWidget;

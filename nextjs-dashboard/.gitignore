@@ -37,3 +37,6 @@ next-env.d.ts
 
 #SQL Scripts
 base_tables.sql
+
+#Other
+temp.html

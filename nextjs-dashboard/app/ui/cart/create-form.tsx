@@ -19,9 +19,11 @@ import AfterPayIcon from '@/app/components/Icons/AfterPayIcon';
 import CreditCardIcon3 from '@/app/components/Icons/CreditCardIcon3';
 import { PaymentMethods } from '@/app/components/Enums';
 import React, { useState, useEffect } from 'react';
-import PowerBoardWidget from '@/app/ui/cart/power-board-widget';
+import CreditCardWidget from '@/app/ui/cart/credit-card-widget';
+import PayPalWidget from '@/app/ui/cart/paypal-widget';
+import AfterPayWidget from '@/app/ui/cart/afterpay-widget';
+import createWalletTokenRequest from '@/app/api/wallet-token'
 
-declare var cba: any; // Declare 'cba' variable
 
 
 export default function Form() {
@@ -34,80 +36,31 @@ export default function Form() {
     console.log('Selected Payment Method:', newValue);
     setSelectedPaymentMethod(newValue);
 
-    // if (newValue === PaymentMethods.CREDIT_CARD) {
-    //   console.log('hello')
-    // }
+    if (newValue === PaymentMethods.PAYPAL) {
+      createWalletToken();
+    }
   };
 
-  useEffect(() => {
-    // Dynamically create script tag for PowerBoard Widget
-    const script = document.createElement('script');
-    script.src = 'https://widget.preproduction.powerboard.commbank.com.au/sdk/latest/widget.umd.js';
-    script.async = true;
+  const [walletToken, setWalletToken] = useState(null);
 
-    script.onload = () => {
-      // Code to execute after the script is loaded
-      var widget = new cba.HtmlWidget("#widget", process.env.NEXT_PUBLIC_POWERBOARD_PUBLIC_KEY, process.env.NEXT_PUBLIC_POWERBOARD_GATEWAY_ID);
-
-      widget.onFinishInsert('input[name="payment_source"]', "payment_source");
-      widget.setEnv("preproduction_cba");
-      widget.useAutoResize();
-      widget.setTexts({ submit_button: "Submit Card" });
-      widget.setStyles({
-        background_color: "#FFFFFF",
-        border_color: "#000000",
-        button_color: "#000000"
-      });
-
-      widget.load();
-
-      widget.on("finish", function (data: any) {
-        console.log("Widget Response", data);
-      });
-    };
-
-    // Append the script tag to the document body
-    document.body.appendChild(script);
-
-    // Clean up function to remove the script tag on component unmount (optional)
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
-
-  // useEffect(() => {
-  //   if (selectedPaymentMethod === PaymentMethods.CREDIT_CARD) {
-  //     console.log('hello');
-
-  //     // Dynamically create script tag for PowerBoard Widget
-  //     const script = document.createElement('script');
-  //     script.src = 'https://widget.preproduction.powerboard.commbank.com.au/sdk/latest/widget.umd.js';
-  //     script.async = true;
-
-  //     script.onload = () => {
-  //       // Code to execute after the script is loaded
-  //       const widget = new cba.HtmlWidget("#widget", "", "");
-
-  //       widget.onFinishInsert('input[name="payment_source"]', "payment_source");
-  //       widget.setEnv("preproduction_cba");
-  //       widget.useAutoResize();
-  //       widget.setTexts({submit_button: "Submit Card"});
-  //       widget.setStyles({background_color: "#FFFFFF", border_color: "#000000", button_color: "#000000"});
-
-  //       widget.load();
-
-  //       widget.on("finish", function(data: any) { console.log("Widget Response", data); });
-  //     };
-
-  //     // Append the script tag to the document body
-  //     document.body.appendChild(script);
-
-  //     // Clean up function to remove the script tag on component unmount (optional)
-  //     return () => {
-  //       document.body.removeChild(script);
-  //     };
-  //   }
-  // }, [selectedPaymentMethod]);
+  const createWalletToken = async () => {
+    try {
+      const apiResponse = await createWalletTokenRequest(
+        "1.00",
+        '123456',
+        'John',
+        'Doe',
+        'john.doe@example.com',
+        process.env.NEXT_PUBLIC_POWERBOARD_GATEWAY_ID,
+        process.env.NEXT_PUBLIC_POWERBOARD_SECRET_KEY
+      );
+      setWalletToken(apiResponse);
+    } catch (error) {
+      // Handle errors
+      console.error('Error handling charge submission:', error);
+    }
+    return walletToken
+  };
 
   return (
     <form action={dispatch}>
@@ -336,79 +289,99 @@ export default function Form() {
 
         {/* Payment Method */}
         <div className="mb-4">
-        <legend className="mb-2 block text-sm font-medium">
-          Pay with:
-        </legend>
-        <div className="rounded-md border border-gray-200 bg-white px-[14px] py-3">
-          <div className="flex gap-4">
-            <div className="flex items-center">
-              <input
-                id="creditCard"
-                name="customerPaymentMethod"
-                type="radio"
-                value="creditCard"
-                className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
-                aria-describedby="payment-error"
-                onChange={handlePaymentMethodChange}
-                required
-              />
-              <label
-                htmlFor="pending"
-                className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600"
-              >
-                Credit Card <CreditCardIcon3 />
-              </label>
-            </div>
-            <div className="flex items-center">
-              <input
-                id="payPal"
-                name="customerPaymentMethod"
-                type="radio"
-                value="payPal"
-                className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
-                aria-describedby="payment-error"
-                onChange={handlePaymentMethodChange}
-                required
-              />
-              <label
-                htmlFor="paid"
-                className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-[#FFC641] px-3 py-1.5 text-xs font-bold italic text-[#08378B]"
-              >
-                <div style={{ display: 'flex' }}>
-                  <span className="text-[#08378B]" >Pay</span>
-                  <span style={{ color: '#279ED8' }}>Pal</span>
-                </div>
-                <PayPalIcon />
-              </label>
-            </div>
-            <div className="flex items-center">
-              <input
-                id="afterPay"
-                name="customerPaymentMethod"
-                type="radio"
-                value="afterPay"
-                className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
-                aria-describedby="payment-error"
-                onChange={handlePaymentMethodChange}
-                required
-              />
-              <label
-                htmlFor="paid"
-                className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-black"
-              >
-                afterpay <AfterPayIcon />
-              </label>
+          <legend className="mb-2 block text-sm font-medium">
+            Pay with:
+          </legend>
+          <div className="rounded-md border border-gray-200 bg-white px-[14px] py-3">
+            <div className="flex gap-4">
+              <div className="flex items-center">
+                <input
+                  id="creditCard"
+                  name="customerPaymentMethod"
+                  type="radio"
+                  value="creditCard"
+                  className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
+                  aria-describedby="payment-error"
+                  onChange={handlePaymentMethodChange}
+                  required
+                />
+                <label
+                  htmlFor="pending"
+                  className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-600"
+                >
+                  Credit Card <CreditCardIcon3 />
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  id="payPal"
+                  name="customerPaymentMethod"
+                  type="radio"
+                  value="payPal"
+                  className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
+                  aria-describedby="payment-error"
+                  onChange={handlePaymentMethodChange}
+                  required
+                />
+                <label
+                  htmlFor="paid"
+                  className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-[#FFC641] px-3 py-1.5 text-xs font-bold italic text-[#08378B]"
+                >
+                  <div style={{ display: 'flex' }}>
+                    <span className="text-[#08378B]" >Pay</span>
+                    <span style={{ color: '#279ED8' }}>Pal</span>
+                  </div>
+                  <PayPalIcon />
+                </label>
+              </div>
+              <div className="flex items-center">
+                <input
+                  id="afterPay"
+                  name="customerPaymentMethod"
+                  type="radio"
+                  value="afterPay"
+                  className="h-4 w-4 cursor-pointer border-gray-300 bg-gray-100 text-gray-600 focus:ring-2"
+                  aria-describedby="payment-error"
+                  onChange={handlePaymentMethodChange}
+                  required
+                />
+                <label
+                  htmlFor="paid"
+                  className="ml-2 flex cursor-pointer items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-black"
+                >
+                  afterpay <AfterPayIcon />
+                </label>
+              </div>
             </div>
           </div>
         </div>
-        </div>
         {/* Credit Card Widget */}
-        <div className="mb-4">
-          <label htmlFor="creditCardWidget" className="mb-2 block text-sm font-medium">
-            Credit/Debit Card
-          </label>
-          <PowerBoardWidget publicKey={process.env.NEXT_PUBLIC_POWERBOARD_PUBLIC_KEY} gatewayId={process.env.NEXT_PUBLIC_POWERBOARD_GATEWAY_ID} />
-        </div>
+        {selectedPaymentMethod === PaymentMethods.CREDIT_CARD && (
+          <div className="mb-4">
+            <label htmlFor="creditCardWidget" className="mb-2 block text-sm font-medium">
+              Credit/Debit Card
+            </label>
+            <CreditCardWidget publicKey={process.env.NEXT_PUBLIC_POWERBOARD_PUBLIC_KEY} gatewayId={process.env.NEXT_PUBLIC_POWERBOARD_GATEWAY_ID} />
+          </div>
+        )}
+        {/* PayPal Widget */}
+        {selectedPaymentMethod === PaymentMethods.PAYPAL && (
+          <div className="mb-4">
+            <label htmlFor="payPalWidget" className="mb-2 block text-sm font-medium">
+              PayPal
+            </label>
+            <PayPalWidget walletToken={walletToken} />
+          </div>
+        )}
+        {/* AfterPay Widget */}
+        {selectedPaymentMethod === PaymentMethods.AFTERPAY && (
+          <div className="mb-4">
+            <label htmlFor="afterPayWidget" className="mb-2 block text-sm font-medium">
+              AfterPay
+            </label>
+            <AfterPayWidget walletToken={walletToken} />
+          </div>
+        )}
         {/* Form Error */}
         <fieldset aria-describedby="form-error">
           <div id="payment-error" aria-live="polite" aria-atomic="true">
